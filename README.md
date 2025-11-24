@@ -4,18 +4,18 @@
 ![Python](https://img.shields.io/badge/Python-3.x-green)
 ![Cypher](https://img.shields.io/badge/Cypher-Query-orange)
 
-## 📋 Description
+## Description
 
 Ce projet implémente un **graphe social** modélisant les relations d'amitié entre étudiants en utilisant la base de données orientée graphes **Neo4j**. Il comprend :
 
-- 🗄️ Modélisation complète des données avec contraintes et index
-- 📝 Plus de 50 requêtes Cypher pour analyser le réseau social
-- 🐍 Scripts Python pour l'analyse et la visualisation
-- 📊 Génération automatique de graphiques et statistiques
-- 💡 Système de recommandations d'amitié
-- 📚 Documentation complète (rapport LaTeX + présentation Beamer)
+-  Modélisation complète des données avec contraintes et index
+-  Plus de 50 requêtes Cypher pour analyser le réseau social
+-  Scripts Python pour l'analyse et la visualisation
+-  Génération automatique de graphiques et statistiques
+-  Système de recommandations d'amitié
+-  Documentation complète (rapport LaTeX + présentation Beamer)
 
-## 🎯 Objectifs
+##  Objectifs
 
 - Modéliser un réseau social avec Neo4j
 - Analyser les relations et communautés
@@ -23,7 +23,7 @@ Ce projet implémente un **graphe social** modélisant les relations d'amitié e
 - Visualiser le graphe avec NetworkX
 - Fournir des insights sur la performance académique
 
-## 📁 Structure du projet
+##  Structure du projet
 
 ```
 exposé_neo4j/
@@ -56,7 +56,7 @@ exposé_neo4j/
 └── README.md                 # Ce fichier
 ```
 
-## 🚀 Installation
+##  Installation
 
 ### Prérequis
 
@@ -79,7 +79,7 @@ python python/populate.py  # Choisir option 3
 
 ### 1. Installer Neo4j
 
-#### Option A : Docker Compose (recommandé) ⭐
+#### Option A : Docker Compose (recommandé) 
 
 La méthode la plus simple avec fichier de configuration :
 
@@ -96,7 +96,7 @@ docker-compose logs -f neo4j
 
 Accéder au navigateur Neo4j : http://localhost:7474
 
-> 📖 Voir `DOCKER.md` pour la documentation complète Docker
+>  Voir `DOCKER.md` pour la documentation complète Docker
 
 #### Option B : Docker Run (commande unique)
 
@@ -132,7 +132,7 @@ source venv/bin/activate  # Linux/Mac
 pip install -r requirements.txt
 ```
 
-## 📊 Utilisation
+##  Utilisation
 
 ### Étape 1 : Créer le schéma
 
@@ -173,7 +173,7 @@ Choisir l'option **5** (Tout générer) pour créer :
 - Graphiques statistiques étudiants (`images/stats_etudiants.png`)
 - Graphiques statistiques cours (`images/stats_cours.png`)
 
-## 🔍 Exemples de requêtes
+##  Exemples de requêtes
 
 ### Trouver les amis de Rachidi
 
@@ -215,7 +215,7 @@ RETURN [n IN nodes(path) | n.nom + ' ' + n.prenom] as chemin,
 
 Plus de 50 requêtes disponibles dans `scripts/03_requetes.cypher` !
 
-## 📈 Modèle de données
+## Modèle de données
 
 ### Nœuds (Nodes)
 
@@ -231,7 +231,7 @@ Plus de 50 requêtes disponibles dans `scripts/03_requetes.cypher` !
 
 Voir `uml/modele_donnees.puml` pour le diagramme complet.
 
-## 📊 Résultats
+##  Résultats
 
 ### Statistiques du réseau
 
@@ -258,7 +258,7 @@ Voir `uml/modele_donnees.puml` pour le diagramme complet.
 | Sophie | Laura | 2 |
 | Rachidi | Laura | 1 |
 
-## 🛠️ Technologies
+## Technologies
 
 - **Neo4j 5.x** - Base de données orientée graphes
 - **Cypher** - Langage de requête déclaratif
@@ -269,7 +269,7 @@ Voir `uml/modele_donnees.puml` pour le diagramme complet.
 - **Pandas** - Manipulation de données
 - **LaTeX** - Documentation professionnelle
 
-## 📚 Documentation
+## Documentation
 
 ### Rapport complet
 
@@ -300,7 +300,7 @@ plantuml modele_donnees.puml
 # Génère modele_donnees.png
 ```
 
-## 🔧 Configuration
+## Configuration
 
 ### Modifier les paramètres de connexion
 
@@ -309,7 +309,7 @@ plantuml modele_donnees.puml
 ```python
 URI = "bolt://localhost:7687"
 USER = "neo4j"
-PASSWORD = "password123"  # ⚠️ Changer selon votre config
+PASSWORD = "password123"  #  Changer selon votre config
 ```
 
 ### Ajouter des données
@@ -321,7 +321,7 @@ Modifier `scripts/02_data_initial.cypher` pour ajouter :
 
 Puis relancer `python populate.py`.
 
-## 🚀 Scénarios avancés
+## Scénarios avancés
 
 Le fichier `scripts/03_requetes.cypher` contient 9 catégories :
 
@@ -335,17 +335,17 @@ Le fichier `scripts/03_requetes.cypher` contient 9 catégories :
 8. **Mises à jour** - Ajouter/supprimer relations, modifier notes
 9. **Export de données** - JSON, CSV
 
-## 🎓 Compétences démontrées
+##  Compétences démontrées
 
-- ✅ Modélisation de données en graphes
-- ✅ Maîtrise du langage Cypher
-- ✅ Analyse de réseaux sociaux
-- ✅ Programmation Python orientée objet
-- ✅ Visualisation de données
-- ✅ Algorithmes de graphes (shortest path, recommandations)
-- ✅ Documentation technique (LaTeX, Markdown)
+-  Modélisation de données en graphes
+-  Maîtrise du langage Cypher
+-  Analyse de réseaux sociaux
+-  Programmation Python orientée objet
+-  Visualisation de données
+-  Algorithmes de graphes (shortest path, recommandations)
+-  Documentation technique (LaTeX, Markdown)
 
-## 🔮 Améliorations futures
+##  Améliorations futures
 
 ### Court terme
 - [ ] Ajouter plus d'étudiants (20-50)
@@ -361,7 +361,7 @@ Le fichier `scripts/03_requetes.cypher` contient 9 catégories :
 - [ ] Intégration LDAP/Active Directory
 - [ ] Déploiement cloud (AWS/GCP/Azure)
 
-## 🤝 Contribution
+##  Contribution
 
 Ce projet a été réalisé par **Rachidi et équipe** dans le cadre d'un projet universitaire sur les bases de données NoSQL.
 
@@ -373,11 +373,11 @@ Ce projet a été réalisé par **Rachidi et équipe** dans le cadre d'un projet
 4. Push vers la branche (`git push origin feature/amelioration`)
 5. Ouvrir une Pull Request
 
-## 📝 Licence
+##  Licence
 
 Ce projet est sous licence MIT. Voir le fichier `LICENSE` pour plus de détails.
 
-## 📧 Contact
+##  Contact
 
 Pour toute question ou suggestion :
 
@@ -385,7 +385,7 @@ Pour toute question ou suggestion :
 - **Email** : rachidi.diallo@univ.fr
 - **Projet** : Master Informatique - Bases de données NoSQL
 
-## 🙏 Remerciements
+##  Remerciements
 
 - **Neo4j** pour leur excellente documentation
 - **NetworkX** pour les outils de visualisation
@@ -394,9 +394,9 @@ Pour toute question ou suggestion :
 
 ---
 
-⭐ **N'oubliez pas de mettre une étoile si ce projet vous a aidé !** ⭐
+ **N'oubliez pas de mettre une étoile si ce projet vous a aidé !** 
 
-## 📖 Ressources
+## Ressources
 
 - [Documentation Neo4j](https://neo4j.com/docs/)
 - [Cypher Manual](https://neo4j.com/docs/cypher-manual/)
