@@ -1,0 +1,84 @@
+@startuml graphe_social_neo4j
+
+!define ENTITY class
+!define RELATION interface
+
+skinparam backgroundColor #FFFFFF
+skinparam classBackgroundColor #E3F2FD
+skinparam classBorderColor #1976D2
+skinparam arrowColor #1976D2
+skinparam noteBorderColor #FFA726
+skinparam noteBackgroundColor #FFF3E0
+
+title Modèle de données - Graphe social d'étudiants (Neo4j)
+
+' Entités (Nodes)
+ENTITY Etudiant {
+  + student_id : String {UNIQUE}
+  + nom : String {INDEX}
+  + prenom : String
+  + age : Integer
+  + email : String {UNIQUE}
+  + telephone : String
+  + filiere : String {INDEX}
+  + niveau : String
+  + hobbies : List<String>
+  + date_inscription : Date
+}
+
+ENTITY Cours {
+  + cours_code : String {UNIQUE, INDEX}
+  + nom : String
+  + credits : Integer
+  + semestre : String
+  + enseignant : String
+}
+
+ENTITY Ville {
+  + nom : String {INDEX}
+  + departement : String
+  + code_postal : String
+}
+
+' Relations
+RELATION AMI_AVEC {
+  + depuis : Date
+  + force : Integer [1-10]
+  + type : String
+}
+
+RELATION ÉTUDIE {
+  + annee : String
+  + note : Float [0-20]
+  + presence : Float [0-100]
+}
+
+RELATION VIT_À {
+  + depuis : Date
+  + adresse : String
+}
+
+' Associations
+Etudiant "0..*" -- "0..*" Etudiant : AMI_AVEC >
+Etudiant "0..*" -- "0..*" Cours : ÉTUDIE >
+Etudiant "0..*" -- "1" Ville : VIT_À >
+
+note right of Etudiant
+  **Nœud principal** du graphe
+  Représente un étudiant avec
+  ses informations personnelles
+  et académiques
+end note
+
+note left of AMI_AVEC
+  **Relation bidirectionnelle**
+  Force : intensité de l'amitié (1-10)
+  Type : proche, etudes, sport, etc.
+end note
+
+note bottom of ÉTUDIE
+  Relie un étudiant à ses cours
+  avec performance académique
+end note
+
+@enduml

@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  neo4j:
+    image: neo4j:latest
+    container_name: neo4j-social-graph
+    ports:
+      - "7474:7474"  # Interface web Neo4j Browser
+      - "7687:7687"  # Port Bolt pour connexions Python
+    environment:
+      # Authentification (changer en production !)
+      - NEO4J_AUTH=neo4j/password123
+      
+      # Configuration mémoire (optionnel - adapter selon vos besoins)
+      - NEO4J_dbms_memory_pagecache_size=512M
+      - NEO4J_dbms_memory_heap_initial__size=512M
+      - NEO4J_dbms_memory_heap_max__size=1G
+      
+      # Plugins (optionnel)
+      - NEO4J_PLUGINS=["apoc", "graph-data-science"]
+    
+    volumes:
+      # Persistance des données
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+      - neo4j_import:/var/lib/neo4j/import
+      - neo4j_plugins:/plugins
+      
+      # Optionnel : Monter les scripts Cypher pour import facile
+      - ./scripts:/scripts:ro
+    
+    restart: unless-stopped
+    
+    # Healthcheck pour vérifier que Neo4j est prêt
+    healthcheck:
+      test: ["CMD-SHELL", "cypher-shell -u neo4j -p password123 'RETURN 1'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    
+    networks:
+      - neo4j-network
+
+# Volumes nommés pour la persistance
+volumes:
+  neo4j_data:
+    driver: local
+  neo4j_logs:
+    driver: local
+  neo4j_import:
+    driver: local
+  neo4j_plugins:
+    driver: local
+
+# Réseau dédié
+networks:
+  neo4j-network:
+    driver: bridge

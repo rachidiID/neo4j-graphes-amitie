@@ -1,0 +1,666 @@
+\documentclass[aspectratio=169]{beamer}
+
+% Thème
+\usetheme{Madrid}
+\usecolortheme{seahorse}
+
+% Packages
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{booktabs}
+
+% Couleurs Neo4j
+\definecolor{neo4jblue}{RGB}{0,136,206}
+\definecolor{neo4jdark}{RGB}{0,90,140}
+\definecolor{codegreen}{RGB}{0,128,0}
+
+\setbeamercolor{structure}{fg=neo4jblue}
+\setbeamercolor{palette primary}{bg=neo4jblue,fg=white}
+\setbeamercolor{palette secondary}{bg=neo4jdark,fg=white}
+
+% Configuration Cypher
+\lstdefinelanguage{Cypher}{
+  keywords={MATCH, CREATE, RETURN, WHERE, WITH, ORDER, BY, LIMIT},
+  keywordstyle=\color{neo4jblue}\bfseries,
+  commentstyle=\color{codegreen},
+  stringstyle=\color{red},
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  frame=single
+}
+
+% Informations
+\title{Graphe d'amitié entre étudiants}
+\subtitle{Projet Neo4j - Base de données orientée graphes}
+\author{Rachidi et équipe}
+\institute{Université}
+\date{24 novembre 2025}
+
+\begin{document}
+
+% Page de titre
+\begin{frame}
+  \titlepage
+\end{frame}
+
+% Sommaire
+\begin{frame}{Sommaire}
+  \tableofcontents
+\end{frame}
+
+% Section 1
+\section{Introduction}
+
+\begin{frame}{Contexte}
+  \begin{columns}
+    \begin{column}{0.5\textwidth}
+      \textbf{Problématique}
+      \begin{itemize}
+        \item Modéliser un réseau social
+        \item Analyser les relations d'amitié
+        \item Recommander de nouveaux amis
+        \item Visualiser les communautés
+      \end{itemize}
+    \end{column}
+    
+    \begin{column}{0.5\textwidth}
+      \textbf{Pourquoi Neo4j ?}
+      \begin{itemize}
+        \item Base orientée graphes
+        \item Relations = citoyens de 1ère classe
+        \item Requêtes intuitives (Cypher)
+        \item Performance sur les graphes
+      \end{itemize}
+    \end{column}
+  \end{columns}
+  
+  \vspace{1cm}
+  \begin{alertblock}{Objectif}
+    Créer un graphe social complet avec analyses et recommandations
+  \end{alertblock}
+\end{frame}
+
+\begin{frame}{Technologies utilisées}
+  \begin{center}
+  \begin{tikzpicture}
+    % Neo4j
+    \node[draw, rounded corners, fill=neo4jblue!20, minimum width=3cm, minimum height=1cm] at (0,2) {\textbf{Neo4j 5.x}};
+    \node[below] at (0,1.5) {Base de données};
+    
+    % Cypher
+    \node[draw, rounded corners, fill=green!20, minimum width=3cm, minimum height=1cm] at (4,2) {\textbf{Cypher}};
+    \node[below] at (4,1.5) {Langage de requête};
+    
+    % Python
+    \node[draw, rounded corners, fill=yellow!20, minimum width=3cm, minimum height=1cm] at (0,0) {\textbf{Python 3.x}};
+    \node[below] at (0,-0.5) {Scripts d'analyse};
+    
+    % NetworkX
+    \node[draw, rounded corners, fill=orange!20, minimum width=3cm, minimum height=1cm] at (4,0) {\textbf{NetworkX}};
+    \node[below] at (4,-0.5) {Visualisation};
+  \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+% Section 2
+\section{Modélisation}
+
+\begin{frame}{Modèle de données}
+  \begin{center}
+  \begin{tikzpicture}[scale=0.9]
+    % Nœuds
+    \node[circle, draw, fill=neo4jblue!30, minimum size=2cm] (etudiant) at (0,0) {\textbf{Etudiant}};
+    \node[circle, draw, fill=green!30, minimum size=1.5cm] (cours) at (5,1) {\textbf{Cours}};
+    \node[circle, draw, fill=orange!30, minimum size=1.5cm] (ville) at (5,-1) {\textbf{Ville}};
+    
+    % Relations
+    \draw[->, thick, bend left=30] (etudiant) to node[above] {\small AMI\_AVEC} (etudiant);
+    \draw[->, thick] (etudiant) to node[above] {\small ÉTUDIE} (cours);
+    \draw[->, thick] (etudiant) to node[below] {\small VIT\_À} (ville);
+  \end{tikzpicture}
+  \end{center}
+  
+  \vspace{0.5cm}
+  
+  \begin{block}{Propriétés principales}
+    \begin{itemize}
+      \item \textbf{Etudiant} : nom, prénom, age, email, filière, hobbies
+      \item \textbf{AMI\_AVEC} : depuis, force (1-10), type (proche/etudes/sport)
+      \item \textbf{ÉTUDIE} : année, note, présence
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]{Contraintes et index}
+  \begin{lstlisting}[language=Cypher]
+// Contraintes d'unicité
+CREATE CONSTRAINT student_id_unique 
+FOR (e:Etudiant) REQUIRE e.student_id IS UNIQUE;
+
+CREATE CONSTRAINT cours_code_unique 
+FOR (c:Cours) REQUIRE c.cours_code IS UNIQUE;
+
+// Index pour performances
+CREATE INDEX etudiant_nom_index 
+FOR (e:Etudiant) ON (e.nom);
+
+CREATE INDEX cours_code_index 
+FOR (c:Cours) ON (c.cours_code);
+  \end{lstlisting}
+\end{frame}
+
+% Section 3
+\section{Implémentation}
+
+\begin{frame}[fragile]{Création d'un étudiant}
+  \begin{lstlisting}[language=Cypher]
+CREATE (rachidi:Etudiant {
+  student_id: 'ETU001',
+  nom: 'Diallo',
+  prenom: 'Rachidi',
+  age: 22,
+  email: 'rachidi.diallo@univ.fr',
+  filiere: 'Informatique',
+  niveau: 'M1',
+  ville: 'Paris',
+  hobbies: ['programmation', 'football'],
+  date_inscription: date('2023-09-01')
+})
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Relations d'amitié bidirectionnelles}
+  \begin{lstlisting}[language=Cypher]
+MATCH (rachidi:Etudiant {student_id: 'ETU001'})
+MATCH (marie:Etudiant {student_id: 'ETU002'})
+
+// Créer les deux sens
+CREATE (rachidi)-[:AMI_AVEC {
+  depuis: date('2023-09-15'),
+  force: 9,
+  type: 'proche'
+}]->(marie)
+
+CREATE (marie)-[:AMI_AVEC {
+  depuis: date('2023-09-15'),
+  force: 9,
+  type: 'proche'
+}]->(rachidi)
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}{Jeu de données initial}
+  \begin{center}
+  \begin{tabular}{lccc}
+    \toprule
+    \textbf{Élément} & \textbf{Nombre} & \textbf{Détails} \\
+    \midrule
+    Étudiants & 6 & 3 villes différentes \\
+    Cours & 5 & INFO301 à INFO305 \\
+    Amitiés & 8 paires & 16 relations (bidirect.) \\
+    Inscriptions & 17 & Avec notes et présence \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+  
+  \vspace{0.5cm}
+  
+  \begin{exampleblock}{Diversité}
+    Différentes filières, niveaux, hobbies, forces d'amitié
+  \end{exampleblock}
+\end{frame}
+
+% Section 4
+\section{Analyses}
+
+\begin{frame}[fragile]{Requêtes de base}
+  \textbf{1. Lister tous les étudiants}
+  \begin{lstlisting}[language=Cypher]
+MATCH (e:Etudiant)
+RETURN e.nom, e.prenom, e.ville
+ORDER BY e.nom;
+  \end{lstlisting}
+  
+  \vspace{0.3cm}
+  
+  \textbf{2. Trouver les amis de Rachidi}
+  \begin{lstlisting}[language=Cypher]
+MATCH (e:Etudiant {nom: 'Diallo'})-[:AMI_AVEC]->(ami)
+RETURN ami.nom + ' ' + ami.prenom as ami,
+       ami.ville;
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Analyses sociales}
+  \textbf{Étudiants les plus populaires}
+  \begin{lstlisting}[language=Cypher]
+MATCH (e:Etudiant)-[:AMI_AVEC]->(:Etudiant)
+WITH e, COUNT(*) as nb_amis
+RETURN e.nom + ' ' + e.prenom as etudiant,
+       nb_amis
+ORDER BY nb_amis DESC
+LIMIT 5;
+  \end{lstlisting}
+  
+  \vspace{0.3cm}
+  
+  \begin{block}{Résultats}
+    \begin{itemize}
+      \item Rachidi Diallo : 4 amis
+      \item Marie Dupont : 4 amis
+      \item Ahmed Ben Ali : 3 amis
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]{Recommandations d'amitié}
+  \begin{lstlisting}[language=Cypher]
+MATCH (e1:Etudiant {nom: 'Diallo'})
+      -[:AMI_AVEC]->()-[:AMI_AVEC]->(e2:Etudiant)
+WHERE NOT (e1)-[:AMI_AVEC]->(e2) AND e1 <> e2
+WITH e2, COUNT(*) as amis_communs
+RETURN e2.nom + ' ' + e2.prenom as suggestion,
+       amis_communs
+ORDER BY amis_communs DESC
+LIMIT 5;
+  \end{lstlisting}
+  
+  \begin{alertblock}{Principe}
+    Recommander des personnes avec qui on a des amis en commun
+  \end{alertblock}
+\end{frame}
+
+\begin{frame}[fragile]{Performance académique}
+  \begin{lstlisting}[language=Cypher]
+MATCH (e:Etudiant)-[r:ÉTUDIE]->(c:Cours)
+WITH e, AVG(r.note) as moyenne
+RETURN e.nom + ' ' + e.prenom as etudiant,
+       ROUND(moyenne * 100) / 100 as moyenne
+ORDER BY moyenne DESC;
+  \end{lstlisting}
+  
+  \vspace{0.5cm}
+  
+  \begin{center}
+  \begin{tikzpicture}
+    \begin{axis}[
+      ybar,
+      symbolic x coords={Rachidi, Marie, Ahmed, Sophie, Thomas, Laura},
+      xtick=data,
+      ymin=0, ymax=20,
+      ylabel={Moyenne},
+      xlabel={Étudiant},
+      width=10cm, height=5cm
+    ]
+    \addplot coordinates {(Rachidi,14.5) (Marie,13.8) (Ahmed,12.3) 
+                          (Sophie,15.2) (Thomas,11.7) (Laura,16.1)};
+    \end{axis}
+  \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+% Section 5
+\section{Scripts Python}
+
+\begin{frame}[fragile]{Connexion Neo4j}
+  \begin{lstlisting}[language=Python]
+from neo4j import GraphDatabase
+
+class Neo4jConnection:
+    def __init__(self, uri, user, password):
+        self.driver = GraphDatabase.driver(uri, 
+                                   auth=(user, password))
+    
+    def query(self, query, parameters=None):
+        with self.driver.session() as session:
+            result = session.run(query, parameters or {})
+            return [dict(record) for record in result]
+  \end{lstlisting}
+  
+  \begin{block}{Utilisation}
+    \texttt{conn = Neo4jConnection("bolt://localhost:7687", "neo4j", "password")}
+  \end{block}
+\end{frame}
+
+\begin{frame}{Visualisation avec NetworkX}
+  \begin{columns}
+    \begin{column}{0.5\textwidth}
+      \textbf{Fonctionnalités}
+      \begin{itemize}
+        \item Graphe du réseau d'amitiés
+        \item Statistiques par étudiant
+        \item Statistiques par cours
+        \item Export en PNG haute résolution
+      \end{itemize}
+      
+      \vspace{0.5cm}
+      
+      \textbf{Métriques calculées}
+      \begin{itemize}
+        \item Nombre d'amis
+        \item Moyennes académiques
+        \item Corrélations
+        \item Répartition géographique
+      \end{itemize}
+    \end{column}
+    
+    \begin{column}{0.5\textwidth}
+      \begin{center}
+      \includegraphics[width=\textwidth]{images/reseau_amities.png}
+      % Image générée par analyze.py
+      \end{center}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Utilisation : Guide pas à pas}
+  \textbf{Étape 1 : Démarrer Neo4j}
+  \begin{lstlisting}[language=bash]
+docker-compose up -d
+sleep 15  # Attendre le demarrage
+  \end{lstlisting}
+  
+  \textbf{Étape 2 : Tester la connexion}
+  \begin{lstlisting}[language=bash]
+cd python/
+python3 connect.py  # Doit afficher "Connecte !"
+  \end{lstlisting}
+  
+  \textbf{Étape 3 : Peupler}
+  \begin{lstlisting}[language=bash]
+python3 populate.py
+# Menu : Taper "3" puis "oui"
+# Resultat : 6 etudiants, 5 cours, 16 amities
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Visualisation (suite)}
+  \textbf{Étape 4 : Neo4j Browser}
+  \begin{itemize}
+    \item Ouvrir \url{http://localhost:7474}
+    \item Login : neo4j / password123
+    \item Requête : \texttt{MATCH (n) RETURN n LIMIT 50}
+  \end{itemize}
+  
+  \vspace{0.3cm}
+  
+  \textbf{Étape 5 : Générer les graphiques}
+  \begin{lstlisting}[language=bash]
+python3 analyze.py
+# Menu : Taper "5" (Tout generer)
+# 3 images PNG creees dans ../images/
+  \end{lstlisting}
+  
+  \vspace{0.3cm}
+  
+  \textbf{Étape 6 : Voir les résultats}
+  \begin{lstlisting}[language=bash]
+cd ../images/
+xdg-open reseau_amities.png
+xdg-open stats_etudiants.png
+xdg-open stats_cours.png
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}{Ce que vous visualisez}
+  \begin{center}
+  \begin{tikzpicture}[scale=0.8]
+    % Neo4j Browser
+    \node[draw, rounded corners, fill=blue!20, minimum width=3.5cm, minimum height=1cm] at (0,3) 
+      {\small Neo4j Browser};
+    \node[below, text width=3.5cm, align=center] at (0,2.3) 
+      {\tiny Graphe interactif\\6 étudiants + 5 cours};
+    
+    % Python Graphiques
+    \node[draw, rounded corners, fill=green!20, minimum width=3.5cm, minimum height=1cm] at (4.5,3) 
+      {\small 3 Graphiques PNG};
+    \node[below, text width=3.5cm, align=center] at (4.5,2.3) 
+      {\tiny NetworkX + Stats};
+    
+    % UML
+    \node[draw, rounded corners, fill=orange!20, minimum width=3.5cm, minimum height=1cm] at (0,1) 
+      {\small Diagramme UML};
+    \node[below, text width=3.5cm, align=center] at (0,0.3) 
+      {\tiny Modèle de données};
+    
+    % PDFs
+    \node[draw, rounded corners, fill=red!20, minimum width=3.5cm, minimum height=1cm] at (4.5,1) 
+      {\small 2 Documents PDF};
+    \node[below, text width=3.5cm, align=center] at (4.5,0.3) 
+      {\tiny Rapport + Présentation};
+  \end{tikzpicture}
+  \end{center}
+  
+  \vspace{0.5cm}
+  
+  \begin{alertblock}{Temps total}
+    Installation complète + visualisation : \textbf{~25 minutes}
+  \end{alertblock}
+\end{frame}
+
+% Section 6
+\section{Résultats}
+
+\begin{frame}{Statistiques du réseau}
+  \begin{center}
+  \begin{tabular}{lc}
+    \toprule
+    \textbf{Métrique} & \textbf{Valeur} \\
+    \midrule
+    Étudiants & 6 \\
+    Cours & 5 \\
+    Amitiés & 16 (8 paires) \\
+    Inscriptions & 17 \\
+    Densité du réseau & 53\% \\
+    Diamètre du graphe & 2 \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+  
+  \vspace{0.5cm}
+  
+  \begin{exampleblock}{Interprétation}
+    Réseau bien connecté avec un diamètre faible (tout le monde est à max 2 liens)
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}{Top recommandations}
+  \begin{center}
+  \begin{tabular}{llc}
+    \toprule
+    \textbf{Étudiant} & \textbf{Suggestion} & \textbf{Amis communs} \\
+    \midrule
+    Thomas & Laura & 2 \\
+    Sophie & Laura & 2 \\
+    Rachidi & Laura & 1 \\
+    Marie & Ahmed & 1 \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+  
+  \vspace{0.5cm}
+  
+  \begin{alertblock}{Insight}
+    Laura pourrait être introduite à Thomas et Sophie via leurs amis communs
+  \end{alertblock}
+\end{frame}
+
+\begin{frame}{Types d'amitiés}
+  \begin{center}
+  \begin{tikzpicture}
+    \pie[text=legend]{50/Amitiés proches (force $\geq$ 8),
+                      37/Amitiés d'études,
+                      13/Amitiés sportives/loisirs}
+  \end{tikzpicture}
+  \end{center}
+  
+  \vspace{0.5cm}
+  
+  \begin{block}{Observation}
+    La moitié des amitiés sont considérées comme \textbf{proches} (force $\geq$ 8)
+  \end{block}
+\end{frame}
+
+% Section 7
+\section{Scénarios avancés}
+
+\begin{frame}[fragile]{Détection de communautés}
+  \begin{lstlisting}[language=Cypher]
+MATCH path = (e1:Etudiant)-[:AMI_AVEC*2..3]-(e2:Etudiant)
+WHERE e1 <> e2 AND 
+      ALL(n IN nodes(path) WHERE 
+          (n)-[:AMI_AVEC]-(e1) AND (n)-[:AMI_AVEC]-(e2))
+RETURN DISTINCT [n IN nodes(path) | n.nom] as clique
+LIMIT 5;
+  \end{lstlisting}
+  
+  \vspace{0.3cm}
+  
+  \begin{block}{Cliques identifiées}
+    \begin{itemize}
+      \item \{Rachidi, Marie, Ahmed\} : groupe parisien
+      \item \{Marie, Sophie, Thomas\} : groupe d'études
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]{Plus court chemin}
+  \begin{lstlisting}[language=Cypher]
+MATCH path = shortestPath(
+  (e1:Etudiant {nom: 'Diallo'})
+   -[:AMI_AVEC*]-(e2:Etudiant {nom: 'Dubois'})
+)
+RETURN [n IN nodes(path) | n.prenom] as chemin,
+       LENGTH(path) as longueur;
+  \end{lstlisting}
+  
+  \vspace{0.5cm}
+  
+  \begin{center}
+  \begin{tikzpicture}[node distance=2cm]
+    \node[circle, draw, fill=neo4jblue!30] (r) {Rachidi};
+    \node[circle, draw, fill=green!30, right of=r] (m) {Marie};
+    \node[circle, draw, fill=orange!30, right of=m] (l) {Laura};
+    
+    \draw[->, thick] (r) -- node[above] {AMI} (m);
+    \draw[->, thick] (m) -- node[above] {AMI} (l);
+  \end{tikzpicture}
+  \end{center}
+  
+  \textbf{Chemin} : Rachidi → Marie → Laura (longueur = 2)
+\end{frame}
+
+\begin{frame}[fragile]{Influence des cours}
+  \begin{lstlisting}[language=Cypher]
+MATCH (e1:Etudiant)-[:AMI_AVEC]->(e2:Etudiant),
+      (e1)-[:ÉTUDIE]->(c:Cours)<-[:ÉTUDIE]-(e2)
+WITH c.nom as cours, COUNT(*) as nb_liens_amicaux
+RETURN cours, nb_liens_amicaux
+ORDER BY nb_liens_amicaux DESC;
+  \end{lstlisting}
+  
+  \vspace{0.3cm}
+  
+  \begin{block}{Résultat}
+    Les cours "Bases de données" et "Algorithmes" favorisent le plus les amitiés
+  \end{block}
+  
+  \begin{exampleblock}{Implication}
+    Travaux de groupe $\rightarrow$ création de liens sociaux
+  \end{exampleblock}
+\end{frame}
+
+% Section 8
+\section{Conclusion}
+
+\begin{frame}{Points clés}
+  \begin{columns}
+    \begin{column}{0.5\textwidth}
+      \textbf{Réalisations}
+      \begin{itemize}
+        \item[$\checkmark$] Modèle de données complet
+        \item[$\checkmark$] 50+ requêtes Cypher
+        \item[$\checkmark$] Scripts Python d'analyse
+        \item[$\checkmark$] Visualisations NetworkX
+        \item[$\checkmark$] Recommandations pertinentes
+      \end{itemize}
+    \end{column}
+    
+    \begin{column}{0.5\textwidth}
+      \textbf{Compétences acquises}
+      \begin{itemize}
+        \item Modélisation en graphes
+        \item Langage Cypher
+        \item Analyse de réseaux sociaux
+        \item Intégration Python-Neo4j
+        \item Algorithmes de graphes
+      \end{itemize}
+    \end{column}
+  \end{columns}
+  
+  \vspace{1cm}
+  
+  \begin{alertblock}{Neo4j : Idéal pour...}
+    Relations complexes, chemins, recommandations, détection de patterns
+  \end{alertblock}
+\end{frame}
+
+\begin{frame}{Améliorations possibles}
+  \textbf{Court terme}
+  \begin{itemize}
+    \item Ajouter plus d'étudiants et de relations
+    \item Intégrer l'évolution temporelle du réseau
+    \item Recommandations multi-critères (hobbies + cours + ville)
+  \end{itemize}
+  
+  \vspace{0.5cm}
+  
+  \textbf{Long terme}
+  \begin{itemize}
+    \item Interface web interactive (Flask/Django + D3.js)
+    \item Algorithmes avancés (PageRank, Louvain, Label Propagation)
+    \item Machine Learning pour prédiction de liens
+    \item API REST pour exposer les fonctionnalités
+    \item Intégration avec systèmes universitaires existants
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Applications réelles}
+  \begin{center}
+  \begin{tikzpicture}[scale=0.8]
+    \node[draw, rounded corners, fill=blue!20, minimum width=4cm] at (0,3) {Réseaux sociaux (Facebook, LinkedIn)};
+    \node[draw, rounded corners, fill=green!20, minimum width=4cm] at (0,2) {Recommandations (Netflix, Amazon)};
+    \node[draw, rounded corners, fill=orange!20, minimum width=4cm] at (0,1) {Détection de fraude (banques)};
+    \node[draw, rounded corners, fill=red!20, minimum width=4cm] at (0,0) {Knowledge graphs (Google)};
+    \node[draw, rounded corners, fill=purple!20, minimum width=4cm] at (0,-1) {Réseaux de citations scientifiques};
+  \end{tikzpicture}
+  \end{center}
+  
+  \vspace{0.5cm}
+  
+  \begin{exampleblock}{Impact}
+    Les graphes sont partout : transport, logistique, santé, cybersécurité...
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}[standout]
+  \Huge Merci !
+  
+  \vspace{1cm}
+  
+  \Large Questions ?
+  
+  \vspace{1cm}
+  
+  \normalsize
+  \textbf{Projet disponible sur :}
+  
+  \texttt{/home/rachidi/Base\_de\_données/exposé\_neo4j/}
+\end{frame}
+
+\end{document}
