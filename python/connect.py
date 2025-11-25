@@ -52,19 +52,31 @@ class Neo4jConnection:
             filepath: Chemin du fichier Cypher
         """
         with open(filepath, 'r', encoding='utf-8') as f:
-            query = f.read()
-            
-        # Séparer les requêtes (par point-virgule)
-        queries = [q.strip() for q in query.split(';') if q.strip() and not q.strip().startswith('//')]
+            content = f.read()
+        
+        # Nettoyer les commentaires et lignes vides
+        lines = []
+        for line in content.split('\n'):
+            line = line.strip()
+            # Ignorer les commentaires et lignes vides
+            if line and not line.startswith('//'):
+                lines.append(line)
+        
+        # Rejoindre et séparer par point-virgule
+        cleaned = ' '.join(lines)
+        queries = [q.strip() for q in cleaned.split(';') if q.strip()]
         
         with self.driver.session() as session:
             for q in queries:
-                if q:
+                if q and len(q) > 5:  # Ignorer les requêtes trop courtes
                     try:
-                        session.run(q)
+                        result = session.run(q)
+                        # Consommer le résultat pour détecter les erreurs
+                        summary = result.consume()
                         print(f"✓ Requête exécutée")
                     except Exception as e:
-                        print(f"✗ Erreur : {e}")
+                        print(f"✗ Erreur sur requête : {str(e)[:100]}")
+                        print(f"   Requête : {q[:80]}...")
     
     def test_connection(self) -> bool:
         """
